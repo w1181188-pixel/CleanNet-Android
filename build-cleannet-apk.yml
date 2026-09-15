@@ -1,0 +1,45 @@
+name: Build CleanNet APK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 取得程式碼
+        uses: actions/checkout@v4
+
+      - name: 設定 Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: 設定 Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: 安裝 Android SDK 35
+        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+
+      - name: 安裝 Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+
+      - name: 解壓縮 CleanNet 專案
+        run: |
+          rm -rf CleanNet-Android
+          unzip -q CleanNet-Android-V1.zip
+          test -f CleanNet-Android/settings.gradle.kts
+
+      - name: 編譯 APK
+        working-directory: CleanNet-Android
+        run: gradle --no-daemon assembleDebug
+
+      - name: 上傳 APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: CleanNet-debug-apk
+          path: CleanNet-Android/app/build/outputs/apk/debug/app-debug.apk
